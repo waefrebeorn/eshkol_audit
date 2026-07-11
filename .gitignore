@@ -177,3 +177,5 @@ artifacts/generative-diff/
 # Generated (deterministic) corpus for the generative-differential harness —
 # regenerable via scripts/gen_generative_corpus.py; never checked in.
 tests/generative-diff/corpus/
+cross-validation/crossval
+cross-validation/*.o
