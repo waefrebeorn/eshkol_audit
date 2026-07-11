@@ -1,8 +1,13 @@
 # AGENTS.md
 
-Guidance for AI agents and contributors working in this fork of
-**`tsotchke/eshkol`** (now `waefrebeorn/eshkol`). Upstream:
-`git@github.com:tsotchke/eshkol.git` (kept as `upstream` remote).
+Guidance for AI agents and contributors working in this audit fork of
+**`tsotchke/eshkol`**.
+
+- **This repo (fork):** `waefrebeorn/eshkol_audit` (the GitHub slug — note the
+  `_audit` suffix; do NOT call it `waefrebeorn/eshkol`).
+- **Upstream:** `git@github.com:tsotchke/eshkol.git` (kept as the `upstream`
+  remote, pointing at the local clone `/home/wubu/tsotchke/eshkol`).
+- **Local working dir:** `/home/wubu/eshkol_audit` (matches the repo slug).
 
 ## Purpose of this fork
 
@@ -68,7 +73,8 @@ gcc -std=c11 -O3 -I. wubu_poincare_geom.c test_crossval.c -o crossval -lm
 | `lib/core/llvm_codegen.cpp` | LLVM IR emission (largest file) | C++ |
 | `lib/backend/eshkol_vm.c` | bytecode VM | C |
 | `lib/frontend/parser.cpp` | source → AST | C++ |
-| `lib/quantum/` | moonlab-integration design (PR #260, not merged math) | — |
+| `lib/quantum/` | real vendored code: `quantum_rng.c/.h` + `quantum_rng_wrapper.c/.h` (moonlab quantum-sim integration; PR #260 design docs also present) | C |
+| `lib/agent/quantum.esk` | agent-facing quantum bindings (added in v1.3.3) | Scheme |
 | `inc/eshkol/` | public headers | C/C++ |
 | `tests/` | 79 integration/unit dirs | mixed |
 | `cross-validation/` | **our** standalone C port + tests | C |
@@ -89,7 +95,15 @@ gcc -std=c11 -O3 -I. wubu_poincare_geom.c test_crossval.c -o crossval -lm
 
 - `manifold-exp-map` conformal factor is mis-placed (inside `tanh`); fails the
   geodesic invariant for non-origin bases. See `cross-validation/REPORT.md`.
-- `vm_geometric.c` referenced in older discussions is **not** in the git tree —
-  geometric math lives only in `manifold.esk`. Don't go looking for it.
+- `lib/backend/vm_geometric.c` **does exist** (native IDs 804–861). It is a
+  *dispatcher*, NOT standalone geometry: when `ESHKOL_GEOMETRIC_ENABLED` is set
+  it delegates to the external `semiclassical_qllm` library (NOT vendored here),
+  and otherwise uses a portable fallback that stores only a scalar
+  `{type, dim, curvature}` — no metric / Christoffel / geodesic math. The
+  **real** Riemannian geometry (exp/log maps, Christoffel, curvature) lives in
+  `lib/core/manifold.esk`. So "vm_geometric exists but the actual math is in
+  manifold.esk" — not "vm_geometric doesn't exist."
+- `lib/quantum/quantum_rng.c` is real committed code (not design-only). Its
+  entropy/quantum claims are what `waefrebeorn/quantum_rng_audit` debunks.
 - The "consciousness engine" / HoTT claims are documentation intent, not verified
   by the committed code. Treat as unproven until exercised with a full build.

@@ -1,7 +1,7 @@
 # Eshkol Structure Notes
 
 Independent architecture analysis of `tsotchke/eshkol` (forked to
-`waefrebeorn/eshkol`, upstream-synced). Written 2026-07-11 during the
+`waefrebeorn/eshkol_audit` — note the `_audit` suffix — upstream-synced). Written 2026-07-11 during the
 cross-validation audit that produced `cross-validation/`.
 
 > Devil's-advocate reminder: this is a *large* repo (157 KB CMakeLists, 79 test
@@ -116,7 +116,13 @@ deliverable requested on the fork.
 
 - The "consciousness engine" (22 primitives), HoTT foundations, and web platform
   are documented but were **not** exercised (need a full LLVM 21 build + runtime).
-- `vm_geometric.c` referenced in earlier audits does **not** exist in the git tree
-  (only `manifold.esk` carries the geometric math). The geometric VM claim is
-  unsubstantiated by the committed code.
-- `lib/quantum/` moonlab-integration (PR #260) is a *design*, not merged math.
+- `lib/backend/vm_geometric.c` **does exist** (native IDs 804–861). It is a
+  *dispatcher*: with `ESHKOL_GEOMETRIC_ENABLED` it calls the external
+  `semiclassical_qllm` library (NOT vendored in this repo); otherwise it uses a
+  portable fallback holding only a scalar `{type, dim, curvature}` — no metric /
+  Christoffel / geodesic code. The actual Riemannian math is in `lib/core/manifold.esk`.
+  So the geometric-VM claim is **under-substantiated by the shipped default build**,
+  not absent from the tree.
+- `lib/quantum/` is real committed code (`quantum_rng.c/.h`, `quantum_rng_wrapper.c/.h`),
+  not a design stub. Its entropy/"quantum" claims are debunked in the sibling fork
+  `waefrebeorn/quantum_rng_audit`. PR #260 adds moonlab-integration *design* docs on top.
