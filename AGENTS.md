@@ -97,10 +97,10 @@ gcc -std=c11 -O3 -I. wubu_poincare_geom.c test_crossval.c -o crossval -lm
   the tangent norm is chordal at the origin (`dist(0,exp_0(v))=2|v|` exactly)
   but the per-base conformal prefactor `lam(p)` is folded into the tangent
   magnitude without a matching rescale in the distance formula, so
-  `dist(p,exp_p(v))/|v|` drifts 2.83→4.96 for `p≠0`. NOTE: the earlier
-  "lam is mis-placed inside tanh" explanation was RETRACTED — `tanh(λ|v|/2)` is
-  the textbook-correct Poincaré form; the real defect is a norm-scaling mismatch
-  between exp-map and distance. See `cross-validation/REPORT.md` F1 (corrected).
+  `dist(p,exp_p(v))/|v|` drifts 2.83→4.96 for `p≠0`. The `tanh(λ|v|/2)` form
+  itself is the textbook-correct Poincaré exp map; the defect is a norm-scaling
+  mismatch between exp-map and distance, not the tanh argument. See
+  `cross-validation/REPORT.md` F1.
 - `lib/backend/vm_geometric.c` **does exist** (native IDs 804–861). It is a
   *dispatcher*, NOT standalone geometry: when `ESHKOL_GEOMETRIC_ENABLED` is set
   it delegates to the external `semiclassical_qllm` library (NOT vendored here),
