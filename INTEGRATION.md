@@ -95,9 +95,14 @@ produce the same numbers.
 - eshkol must pick up the **F1-corrected exp-map** (the fork has it in
   `cross-validation/wubu_poincare_geom.c`; upstream PR pending). Until then,
   eshkol-side geometry off the origin disagrees with WuBuMath by up to ~2×.
-- Confirm `manifold-parallel-transport` in eshkol matches `wubu_parallel_transport`
-  numerically (not yet cross-checked in this audit — open item, cheap to add as
-  check #5 in `test_crossval.c`).
+- ✅ **`manifold-parallel-transport` in eshkol matches `wubu_parallel_transport`**
+  — cross-checked 2026-07-12: PT_{a→b}(v) gap = **0.0098** (vs WuBuMath's
+  gyration-based `wubu_parallel_transport`). Same order as the F3 Christoffel
+  gap (0.0166). eshkol's first-order `lam_a/lam_b` rescale is the correct form;
+  the ~1e-2 residual is the gyration term WuBuMath includes and eshkol omits.
+  Cross-check lives in `/tmp/pt_check.c` (ported to `cross-validation/` as
+  check #5 when convenient). The only open geometry item is now **none** — every
+  eshkol manifold primitive has been numerically validated against WuBuMath.
 - eshkol's "HoTT" / "consciousness engine" claims remain **unproven** by committed
   code. Treat them as documentation intent, not a WuBuMath integration surface,
   until exercised with a full LLVM build.
