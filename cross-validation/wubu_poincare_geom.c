@@ -81,3 +81,23 @@ float manifold_ricci(ManifoldType t,const float*x,int n,int i,int j,float c){
     float lam=manifold_lambda(t,x,n,c);
     return manifold_sectional_curvature(t,c)*(float)(n-1)*lam*lam*(i==j?1.0f:0.0f);
 }
+
+/* === Parallel transport (audit F-PT, added 2026-07-12) === */
+void parallel_transport_eshkol(float*o,const float*a,const float*b,const float*v,int n,float c){
+    /* eshkol's manifold-parallel-transport, hyperbolic branch: rescale by the
+       conformal-factor ratio lam(a)/lam(b). Euclidean: identity. Spherical:
+       remove the component along b (eshkol's branch). c<=0 -> Euclidean. */
+    if(c<=0){ wpg_vscale(o,v,1.0f,n); return; }
+    float la=manifold_lambda(MAN_HYPERBOLIC,a,n,c);
+    float lb=manifold_lambda(MAN_HYPERBOLIC,b,n,c);
+    wpg_vscale(o,v,la/lb,n);
+}
+
+void parallel_transport_ref(float*o,const float*b,const float*v,int n,float c){
+    /* Reference: transport a tangent at the ORIGIN to point b. lam(0)=2, so the
+       scaling is 2/lam(b). Gyration-free at the origin — this is the operation
+       waefrebeorn/WuBuMath's wubu_parallel_transport_to_p performs (origin -> b). */
+    if(c<=0){ wpg_vscale(o,v,1.0f,n); return; }
+    float lb=manifold_lambda(MAN_HYPERBOLIC,b,n,c);
+    wpg_vscale(o,v,2.0f/lb,n);
+}

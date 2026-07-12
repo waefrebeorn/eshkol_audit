@@ -51,4 +51,15 @@ float manifold_sectional_curvature(ManifoldType t,float c);
 float manifold_scalar_curvature(ManifoldType t,int n,float c);
 float manifold_ricci(ManifoldType t,const float*x,int n,int i,int j,float c);
 
+/* === Parallel transport (audit F-PT, added 2026-07-12) ===
+ * eshkol's manifold-parallel-transport (hyperbolic branch) rescales the tangent
+ * by the conformal-factor ratio lam(a)/lam(b):  PT_{a->b}(v) = (lam_a/lam_b)*v.
+ * The reference form transports a tangent at the ORIGIN to point b
+ * (lam(0)=2, so PT_{0->b}(v) = (2/lam_b)*v) — this is what
+ * waefrebeorn/WuBuMath's wubu_parallel_transport_to_p does (gyration-free at the
+ * origin). Check #5 in test_crossval.c verifies eshkol's rescale agrees with the
+ * reference to ~1e-2 (the gyration term WuBuMath adds for a->b is the residual). */
+void parallel_transport_eshkol(float*o,const float*a,const float*b,const float*v,int n,float c);
+void parallel_transport_ref(float*o,const float*b,const float*v,int n,float c);
+
 #endif

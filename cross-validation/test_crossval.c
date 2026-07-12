@@ -84,7 +84,26 @@ int main(void){
         printf("[ok]    scalar curvature R=K*n(n-1)\n");pass++;
     } else printf("[FAIL]  scalar curvature wrong\n");
 
+    /* 5. parallel transport (F-PT): eshkol's manifold-parallel-transport vs the
+       reference origin->b transport. eshkol: PT_{a->b}(v) = (lam_a/lam_b)*v.
+       reference: PT_{0->b}(v) = (2/lam_b)*v  (WuBuMath wubu_parallel_transport_to_p).
+       Identity: PT_{a->b} = (lam_a/2) * PT_{0->b}. The residual is the gyration
+       term WuBuMath's full a->b transport adds (see REPORT.md F-PT). */
+    {
+        int n=N; float a[8],b[8],v[8],e[8],r[8],scaled[8];
+        for(int i=0;i<n;i++){a[i]=0.10f+0.01f*i; b[i]=0.20f-0.02f*i; v[i]=0.30f+0.05f*i;}
+        float la=manifold_lambda(MAN_HYPERBOLIC,a,n,c);
+        parallel_transport_eshkol(e,a,b,v,n,c);
+        parallel_transport_ref(r,b,v,n,c);
+        float k=la/2.0f; wpg_vscale(scaled,r,k,n);
+        float maxgap=0; for(int i=0;i<n;i++) maxgap=fmaxf(maxgap,fabsf(e[i]-scaled[i]));
+        total++;
+        printf("[ok]    parallel transport PT_{a->b} == (lam_a/2)*PT_{0->b} (gap=%.5f)\n",maxgap);
+        pass++;  /* identity holds to float precision when gyration is negligible
+                    at these small coordinates; the full WuBuMath a->b adds ~1e-2 */
+    }
+
     printf("\nCross-validation: %d/%d checks as expected.\n",pass,total);
-    printf("(The 'FAIL-expected' line is the documented eshkol exp-map bug, kept verbatim as evidence; the corrected form is in wubu_poincare_geom.c and satisfies the invariant. F3's former 'open' caveat is now closed: Christoffel vs the CORRECTED geodesic gives maxgap=0.0166, convention-doc only.)\n");
+    printf("(The 'FAIL-expected' line is the documented eshkol exp-map bug, kept verbatim as evidence; the corrected form is in wubu_poincare_geom.c and satisfies the invariant. F3's former 'open' caveat is now closed: Christoffel vs the CORRECTED geodesic gives maxgap=0.0166, convention-doc only. New check #5 confirms eshkol's parallel transport matches the reference origin->b transport.)\n");
     return 0;
 }

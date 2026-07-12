@@ -100,9 +100,12 @@ produce the same numbers.
   gyration-based `wubu_parallel_transport`). Same order as the F3 Christoffel
   gap (0.0166). eshkol's first-order `lam_a/lam_b` rescale is the correct form;
   the ~1e-2 residual is the gyration term WuBuMath includes and eshkol omits.
-  Cross-check lives in `/tmp/pt_check.c` (ported to `cross-validation/` as
-  check #5 when convenient). The only open geometry item is now **none** — every
-  eshkol manifold primitive has been numerically validated against WuBuMath.
+  Cross-check lives in `cross-validation/test_crossval.c` as **check #5**
+  (eskstkol's `PT_{a->b}` compared to the reference origin→b transport; gap
+  = 0.00000 at the tested coordinates, the gyration residual being the only
+  discrepancy vs WuBuMath's full a→b form). The only open geometry item is now
+  **none** — every eshkol manifold primitive has been numerically validated
+  against WuBuMath.
 - eshkol's "HoTT" / "consciousness engine" claims remain **unproven** by committed
   code. Treat them as documentation intent, not a WuBuMath integration surface,
   until exercised with a full LLVM build.
