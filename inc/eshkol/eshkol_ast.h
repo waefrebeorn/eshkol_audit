@@ -15,10 +15,6 @@
 extern "C" {
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef enum {
     ESHKOL_INVALID_OP,
     ESHKOL_COMPOSE_OP,
@@ -819,9 +815,5 @@ extern "C" void eshkol_reset_parse_line_counter(void);
 
 #endif
 
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* ESHKOL_AST_H */

@@ -163,6 +163,41 @@ static inline bool eshkol_closure_returns_scalar(eshkol_tagged_value_t tagged) {
     return eshkol_closure_get_return_type(tagged) == CLOSURE_RETURN_SCALAR;
 }
 
+// ===== PRIMITIVE FUNCTION STRUCTURE =====
+// Primitive functions are built-in operations that are not closures.
+// Unlike closures, they don't have captured environments or S-expression representations.
+// The object header's subtype field indicates CALLABLE_SUBTYPE_PRIMITIVE.
+
+// Primitive flags
+#define PRIMITIVE_FLAG_VARIADIC    0x01  // Primitive accepts variadic arguments
+#define PRIMITIVE_FLAG_PURE        0x02  // Primitive has no side effects
+
+/**
+ * Runtime representation of a primitive/builtin function.
+ *
+ * Primitives are similar to closures but without captured environments.
+ * They store metadata needed for introspection (arity, name, type).
+ */
+typedef struct eshkol_primitive {
+    uint64_t func_ptr;                    // Pointer to the native function implementation
+    const char* name;                     // Name of the primitive (e.g., "car", "cdr", "+")
+    uint8_t input_arity;                  // Number of expected input arguments (0-255)
+    uint8_t flags;                        // Primitive flags (variadic, pure, etc.)
+    uint16_t reserved;                    // Padding for alignment
+    uint32_t hott_type_id;                // HoTT TypeId for function signature (0 = unknown)
+} eshkol_primitive_t;
+
+// Compile-time size validation for primitive structure
+ESHKOL_STATIC_ASSERT(sizeof(eshkol_primitive_t) == 24,
+                     "Primitive structure must be 24 bytes for alignment");
+
+// Helper to check if primitive is variadic
+#define PRIMITIVE_IS_VARIADIC(prim) (((prim)->flags & PRIMITIVE_FLAG_VARIADIC) != 0)
+
+// Helper to check if primitive is pure (no side effects)
+#define PRIMITIVE_IS_PURE(prim) (((prim)->flags & PRIMITIVE_FLAG_PURE) != 0)
+
+// ===== END CLOSURE ENVIRONMENT STRUCTURES =====
 
 #ifdef __cplusplus
 }
