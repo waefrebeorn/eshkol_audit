@@ -12,7 +12,7 @@ static float rnd(void){static unsigned s=12345;s=s*1664525u+1013904223u;return (
 int main(void){
     const int N=4; float c=1.0f; int pass=0, total=0;
 
-    /* 1. eshkol exp-map geodesic invariant (documents the bug) */
+    /* 1. eshkol exp-map geodesic invariant (was the F1 bug; now FIXED) */
     {
         int bad=0; float first=-1;
         for(int t=0;t<500;t++){
@@ -27,8 +27,8 @@ int main(void){
             if(fabsf(ratio-first)>0.15f){bad=1;break;}
         }
         total++;
-        if(bad){printf("[FAIL-expected] eshkol exp-map geodesic invariant NON-CONSTANT (bug reproduced)\n"); pass++;}
-        else   {printf("[ok]    eshkol exp-map invariant held (unexpected)\n");}
+        if(bad){printf("[FAIL]  eshkol exp-map geodesic invariant NON-CONSTANT (F1 bug NOT fixed)\\n");}
+        else   {printf("[ok]    eshkol exp-map geodesic invariant CONSTANT (F1 fixed)\\n");pass++;}
     }
 
     /* 2. corrected exp-map at origin: dist(0,exp_0(v)) approx 2|v| */

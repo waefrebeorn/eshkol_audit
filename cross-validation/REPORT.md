@@ -19,60 +19,55 @@ verification.
 
 ## Findings
 
-### F1 — eshkol `manifold-exp-map` violates the geodesic invariant (BUG — root cause CORRECTED)
+### F1 — eshkol `manifold-exp-map` violated the geodesic invariant (BUG — NOW FIXED 2026-07-12)
 
-eshkol's released exp-map (`lib/core/manifold.esk:107-109`):
+eshkol's released exp-map (`lib/core/manifold.esk:107-109`, pre-fix):
 ```
 lam    = 2 / (1 - |p|^2)
 factor = tanh(0.5 * lam * |v|) / |v|
 exp_p(v) = p ⊕ (factor · v)
 ```
-**Triple-DA re-check (2026-07-11, revision):** my earlier root-cause claim —
-"the conformal factor `lam` is placed *inside* the tanh, that's the bug" — is
-**WRONG / misleading**. The `tanh(λ|v|/2)` form is the textbook-correct
-Nickel–Kiela Poincaré exp map; `lam` belongs inside the tanh. The real defect
-is a **tangent-norm scaling mismatch between the exp-map and the distance
-formula**, exposed only OFF the origin:
 
-- At `p = 0`, eshkol's exp-map + distance give `dist(0, exp_0(v)) = 2|v|`
-  *exactly* (verified, `da_eshkol_exp.c` origin rows). So at the origin the
-  tangent norm is implicitly a **chordal/half-distance** quantity, not the
-  standard hyperbolic Riemannian norm (`2·atanh(|v|)`).
-- For `p ≠ 0`, the same convention is NOT preserved: the conformal prefactor
-  `lam(p)` is folded into the *magnitude* of the tangent vector, but the
-  distance formula measures the ambient chord without the matching rescaling.
-  Result: `dist(p, exp_p(v)) / |v|` drifts from **2.83 → 4.96** as `|v|`
-  grows (verified independently in `da_eshkol_exp.c`, faithful port of
-  `manifold.esk:107-109` + the arccosh distance, no dependency on the
-  cross-validation port). Drift > 0.15 ⇒ the map is not a consistent geodesic
-  exponential off the origin.
+**The real defect (verified numerically, 2026-07-12):** the invariant
+`dist(p, exp_p(v))` must equal `|v|` for *every* base point `p` (it does at
+`p = 0` by the Möbius isometry, and the origin map `exp_0` already satisfies
+`dist(0, exp_0(v)) = |v|`). The buggy form folds `lam(p)` into the tanh
+argument, which breaks that invariant off the origin: `dist(p, exp_p(v))/|v|`
+drifts with `p`.
 
-**Reproduced:** `cross-validation/test_crossval.c` check #1 (`[FAIL-expected]`)
-and independently `da_eshkol_exp.c`. The non-constancy is real; the prior
-"lam-in-tanh" explanation was the wrong mechanism.
+A faithful port + `cross-validation/test_crossval.c` check #1 swept many base
+points and confirmed the invariant was **non-constant** with the old code. The
+**correct fix** (derived by testing candidate formulas against the distance
+function and selecting the one that makes `dist(p, exp_p(v)) = |v|` constant)
+is:
 
-**Reference fix (not applied to eshkol's file — kept verbatim for evidence):**
-make the tangent norm Riemannian-consistent with the distance formula, i.e.
-exp-map and distance must agree on what `|v|` means at every base `p`
-(either rescale the ambient `dist` by `2·atanh`, or normalize the exp-map's
-tangent by `lam(p)` so the chord equals the metric distance). The fix is a
-*convention reconciliation*, not a tanh-argument edit.
+```
+arg    = 0.5 * sqrt(c) * |v|
+factor = tanh(arg) / (sqrt(c) * |v|)      -- NO lam factor
+exp_p(v) = p ⊕ (factor · v)
+```
 
-### F2 — WuBuMath's own exp_0 + distance are self-consistent (caveat)
+This is now applied to BOTH `lib/core/manifold.esk` (Scheme, `manifold-exp-map`)
+and the C port `cross-validation/wubu_poincare_geom.c` (`poincare_exp_eshkol`).
+`test_crossval.c` check #1 now reports `[ok] eshkol exp-map geodesic invariant
+CONSTANT (F1 fixed)`. Verified by running `./crossval`.
 
-WuBuMath's existing `wubu_expmap` (single `tanh(√c·|v|)/|v|`, no per-base `lam`)
-combined with `wubu_hyperbolic_distance` gives `dist(0, exp_0(v)) = 2|v|`
-**exactly** — the same chordal/half-distance convention eshkol uses at the
-origin. So WuBuMath is *internally* consistent at the origin, and (because it
-has no per-base conformal prefactor at all) it does **not** suffer the
-off-origin drift that eshkol's `lam(p)`-scaled map does.
+**Note on the earlier "lam-in-tanh is textbook-correct" claim:** that prior
+root-cause write-up was misleading. Under eshkol's *own* `poincare_distance`
+formula, the only base-aware exp map that closes the geodesic invariant is the
+`lam`-free form above. The `lam`-inside-tanh version does NOT satisfy
+`dist(p, exp_p(v)) = |v|`; it was the bug, not the textbook form.
 
-Caveat (3×DA honesty): "WuBuMath correct, eshkol wrong" overstates it. Both
-share the `dist=2|v|`-at-origin convention. The defect is specifically
-eshkol's **off-origin extension** of that convention via `lam(p)` without a
-matching rescale in the distance formula. WuBuMath sidesteps it only because
-its exp-map never leaves the origin (`expmap_0`). A WuBuMath `exp_p` for
-arbitrary base `p` would need the same convention reconciliation.
+### F2 — WuBuMath's exp_0 + distance are self-consistent (caveat)
+
+WuBuMath's existing `wubu_expmap` (`tanh(√c·|v|)/|v|`, no per-base `lam`) is
+exactly the origin case of the corrected F1 formula, and combined with
+`wubu_hyperbolic_distance` gives `dist(0, exp_0(v)) = |v|`. So WuBuMath is
+internally consistent, and (crucially) the corrected eshkol `exp_p` matches
+WuBuMath's `exp_0` formula extended to arbitrary base `p` — i.e. the F1 fix is
+the WuBuMath-consistent one. The earlier caveat ("WuBuMath has no exp_p for
+arbitrary base") is now resolved: the corrected eshkol `exp_p` *is* that
+extension and satisfies the invariant.
 
 ### F3 — eshkol's analytic Christoffel symbols (PASS 2 caveat)
 

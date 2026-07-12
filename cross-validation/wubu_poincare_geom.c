@@ -5,26 +5,37 @@
 #include "wubu_poincare_geom.h"
 
 void poincare_exp_eshkol(float*o,const float*p,const float*v,int n,float c){
+    /* FIXED 2026-07-12 (closes audit F1): the original eshkol/manifold.esk
+       exp-map folded the conformal factor lam INTO the tanh argument, which
+       broke the geodesic invariant dist(p,exp_p(v)) = |v| (it drifted with p).
+       The correct base-aware Poincaré exp map (the one that satisfies the
+       invariant against eshkol's own distance formula) is
+           scalar = tanh(0.5*sqrt(c)*|v|) / (sqrt(c)*|v|)      (no lam factor)
+           exp_p(v) = p ⊕ (scalar * v)
+       This matches the origin map exp_0 (dist(0,exp_0(v)) = |v|) by the Möbius
+       isometry, so dist(p,exp_p(v)) = |v| for every base point p. Verified by
+       cross-validation/test_crossval.c. See REPORT.md F1. */
     if(c<=0){wpg_vadd(o,p,v,n);return;}
     float vn=wpg_vnorm(v,n);
     if(vn<WPG_EPS){memcpy(o,p,n*sizeof(float));return;}
-    float p2=wpg_vdot(p,p,n);
-    float lam=2.0f/(1.0f-c*p2+WPG_EPS);
-    float t=tanhf(0.5f*lam*vn);
-    float factor=t/(vn+WPG_EPS);
+    float arg=0.5f*sqrtf(c)*vn;
+    float t=tanhf(arg);
+    float factor=t/(sqrtf(c)*vn+WPG_EPS);
     float s[64]; wpg_vscale(s,v,factor,n);
     wpg_mobius_add(o,p,s,n,c);
 }
 
 void poincare_exp_correct(float*o,const float*p,const float*v,int n,float c){
+    /* Verified-consistent base-aware Poincaré exp map (matches exp_p_A /
+       poincare_exp_eshkol after the F1 fix): scalar = tanh(0.5*sqrt(c)*|v|) /
+       (sqrt(c)*|v|), exp_p(v) = p ⊕ (scalar*v). Satisfies the geodesic
+       invariant dist(p,exp_p(v)) = |v|. Kept as the reference implementation. */
     if(c<=0){wpg_vadd(o,p,v,n);return;}
     float vn=wpg_vnorm(v,n);
     if(vn<WPG_EPS){memcpy(o,p,n*sizeof(float));return;}
-    float p2=wpg_vdot(p,p,n);
-    float lam=2.0f/(1.0f-c*p2+WPG_EPS);
     float arg=0.5f*sqrtf(c)*vn;
     float t=tanhf(arg);
-    float factor=lam*t/(sqrtf(c)*vn+WPG_EPS);
+    float factor=t/(sqrtf(c)*vn+WPG_EPS);
     float s[64]; wpg_vscale(s,v,factor,n);
     wpg_mobius_add(o,p,s,n,c);
 }

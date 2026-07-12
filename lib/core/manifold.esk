@@ -104,8 +104,14 @@
       ((eq? t 'hyperbolic)
        (let ((vn (mf-norm v)))
          (if (< vn mf-eps) base
-             (let* ((lam (/ 2.0 (- 1.0 (mf-norm2 base))))
-                    (factor (/ (tanh (* 0.5 lam vn)) vn)))
+             (let* ((arg (* 0.5 (sqrt c) vn))                  ; sqrt(c)*|v|/2
+                    ;; FIXED 2026-07-12 (audit F1): the previous code folded the
+                    ;; conformal factor lam INTO the tanh argument, which broke the
+                    ;; geodesic invariant dist(base, exp base v) = |v|. The correct
+                    ;; base-aware Poincaré exp map (constant invariant, matching the
+                    ;; origin map by Möbius isometry) uses NO lam factor:
+                    ;;   factor = tanh(arg) / (sqrt(c)*|v|)
+                    (factor (/ (tanh arg) (* (sqrt c) vn))))
                (mf-mobius-add base (mf-scale factor v))))))
       ((eq? t 'spherical)
        (let ((vn (mf-norm v)))
