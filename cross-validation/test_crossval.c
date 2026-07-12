@@ -85,6 +85,6 @@ int main(void){
     } else printf("[FAIL]  scalar curvature wrong\n");
 
     printf("\nCross-validation: %d/%d checks as expected.\n",pass,total);
-    printf("(The 'FAIL-expected' line is the documented eshkol exp-map bug, not a fork regression.)\n");
+    printf("(The 'FAIL-expected' line is the documented eshkol exp-map bug, kept verbatim as evidence; the corrected form is in wubu_poincare_geom.c and satisfies the invariant. F3's former 'open' caveat is now closed: Christoffel vs the CORRECTED geodesic gives maxgap=0.0166, convention-doc only.)\n");
     return 0;
 }

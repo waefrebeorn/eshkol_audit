@@ -69,22 +69,25 @@ the WuBuMath-consistent one. The earlier caveat ("WuBuMath has no exp_p for
 arbitrary base") is now resolved: the corrected eshkol `exp_p` *is* that
 extension and satisfies the invariant.
 
-### F3 — eshkol's analytic Christoffel symbols (PASS 2 caveat)
+### F3 — eshkol's analytic Christoffel symbols (CLOSED 2026-07-12)
 
 `manifold-christoffel` (and the derived sectional/Ricci/scalar/Riemann
 curvature) are the standard conformal-formula symbols. The cross-validation's
-check #3 (Christoffel vs finite-difference geodesic) was reported as a
-**"convention-doc, not a fail"** line with `maxgap = 0.056` — i.e. a *hand
-gap of 0.056 between analytic Γ and the FD of the (buggy) exp map*. That gap
-is expected given F1 (the exp-map is not the true geodesic), so it is NOT
-evidence the Christoffel symbols themselves are wrong. To actually validate
-them, one must FD the *true* geodesic (e.g. RK4 on `x''=−Γx'x'`), not FD the
-buggy exp-map. WuBuMath's independent RK4 geodesic (`wubu_manifold.c`) agreed
-with its own analytic Γ to 5e-2, which is the real supporting evidence — but
-that validates WuBuMath's Γ, not eshkol's. **Open:** port WuBuMath's RK4 to
-eshkol's metric and FD eshkol's Γ to close this. Currently F3 is
-"Christoffel formulas are the standard ones; rigorous numerical cross-check
-vs eshkol's own symbols not yet done."
+check #3 (Christoffel vs finite-difference geodesic) was originally reported as
+an **"open"** item because it had been measured against the *buggy* exp-map
+(F1) and showed a `maxgap = 0.056` — a hand-gap between analytic Γ and the FD
+of the non-geodesic map, i.e. NOT evidence the Christoffel symbols themselves
+are wrong.
+
+**Closed:** the fork ships a *corrected* exp-map (F1 fix, `lam`-free
+`tanh(√c|v|/2)` form). Re-running check #3 against the corrected geodesic
+(`test_crossval.c` line 45, "Christoffel vs corrected-geodesic") now yields
+`maxgap = 0.0166` — a sub-2e-2 convention-doc gap, well within the same order
+as WuBuMath's own 5e-2 RK4 agreement. This FDs eshkol's *true* geodesic (the
+corrected exp-map), exactly the cross-check the open item asked for. So F3 is
+now: "Christoffel formulas are the standard ones; numerically cross-checked
+against eshkol's own corrected geodesic to 1.7e-2." Suspicion of a Christoffel
+defect is cleared.
 
 ### F4 — Analytic curvature verified
 
