@@ -8,9 +8,15 @@ A standalone C11 port of eshkol's Riemannian-geometry library
 (`lib/core/manifold.esk`) plus numeric cross-checks against `WuBuMath`.
 **Empirically run** (`cross-validation/crossval` → "4/5 checks as expected").
 Headline findings:
-- **F1 (fixed):** `manifold-exp-map` violated the geodesic invariant off the
-  origin (`dist(p,exp_p(v))/|v|` drifted 2.83→4.96 for `p≠0`); corrected to the
-  `lam`-free `tanh(√c|v|/2)` form, now constant. Verified by `./crossval`.
+- **F1 (convention mismatch, reconciled):** `manifold-exp-map` mixed two
+  tangent-vector conventions — a coordinate-tangent `λ_p` prefactor folded into
+  the exp-map while the distance formula measured a plain `‖v‖`. Off the origin
+  this made `dist(p,exp_p(v))/|v|` drift `2.83→4.96`. The fork adopts the
+  *normalized-tangent* convention (`tanh(√c|v|/2)` form), which closes the
+  invariant for every base `p`. Upstream instead keeps the *coordinate-tangent*
+  convention (`distance = λ_x·‖v‖`) and locks it behind analytic off-origin
+  invariants (#276). Both are internally coherent; the defect was mixing them.
+  See the convention note in `cross-validation/REPORT.md`.
 - **F3/F4 (verified):** analytic Christoffel symbols + curvature
   (K=−1/+1/0, scalar R=K·n(n−1), Ricci) are the standard formulas and pass
   symbolically; the numeric geodesic cross-check is **open** (documented).

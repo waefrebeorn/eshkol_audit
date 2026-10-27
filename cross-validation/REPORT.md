@@ -58,6 +58,36 @@ formula, the only base-aware exp map that closes the geodesic invariant is the
 `lam`-free form above. The `lam`-inside-tanh version does NOT satisfy
 `dist(p, exp_p(v)) = |v|`; it was the bug, not the textbook form.
 
+#### Convention note: coordinate-tangent vs normalized-tangent
+
+The exp-map defect is fundamentally a **tangent-vector convention mismatch**,
+not a formula typo. Two conventions exist and must be stated explicitly so the
+exp-map and the distance function agree:
+
+- **Coordinate-tangent convention (eshkol's current API).** The input `v` is a
+  *coordinate* tangent vector. Under the Poincaré metric its Riemannian norm is
+  `λ_x · ‖v‖`, so a standard coordinate-tangent exponential includes `λ_x`
+  inside `tanh`, and `distance(x, exp_x(v)) = λ_x · ‖v‖`. The matching log map
+  returns that coordinate tangent. This is internally coherent **if and only if**
+  the distance function uses the same `λ_x · ‖v‖` norm.
+
+- **Normalized-tangent convention (the `lam`-free F1 fix).** The input `v` is a
+  *normalized* tangent with `distance = ‖v‖` by definition. The exponential is
+  `tanh(√c·‖v‖/2)/(√c·‖v‖) · v` and the invariant `dist(p, exp_p(v)) = ‖v‖`
+  holds for *every* base `p`. This is the convention the corrected
+  `manifold-exp-map` and `wubu_poincare_geom.c` adopt.
+
+**Why the original code broke:** it mixed the two — it applied the
+coordinate-tangent `λ_p` prefactor to the tangent magnitude *inside* the exp map
+(the coordinate-tangent form) while the distance formula measures a plain
+`‖v‖` (the normalized-tangent form). Folding `λ_p` into the tanh argument
+without a matching `λ_p` rescale in the distance makes
+`dist(p, exp_p(v))/‖v‖` drift `2.83 → 4.96` for `p ≠ 0`. The fix adopts the
+normalized-tangent convention consistently, so exp-map and distance share the
+same norm. **Either convention is defensible, but a single build must not mix
+them** — that is the actual defect, and the one the upstream hardening (#276)
+now locks behind analytic off-origin invariants.
+
 ### F2 — WuBuMath's exp_0 + distance are self-consistent (caveat)
 
 WuBuMath's existing `wubu_expmap` (`tanh(√c·|v|)/|v|`, no per-base `lam`) is
